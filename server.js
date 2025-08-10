@@ -7,7 +7,7 @@ const messagesRoutes = require('./routes/messages');
 const productsRoutes = require('./routes/products');
 const ordersRoutes = require('./routes/orders');
 const usersRoutes = require('./routes/users');
-const reviewsRoutes = require('./routes/reviews'); 
+const reviewsRoutes = require('./routes/reviews');
 const uploadRoutes = require('./routes/uploadRoutes');
 
 const cors = require('cors');
@@ -15,9 +15,25 @@ const cors = require('cors');
 const app = express();
 app.use(express.json());
 
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://frontend-shield.vercel.app'
+];
+
 app.use(cors({
-  origin: 'http://localhost:3000'  //  front
+  origin: function(origin, callback) {
+    // Autoriser les requêtes sans origine (ex: Postman, curl)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS.`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true, // si tu utilises les cookies ou sessions
 }));
+
 // Connexion MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
