@@ -17,12 +17,14 @@ app.use(express.json());
 
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://frontend-shield.vercel.app'
+  'https://frontend-shield.vercel.app',
+  'https://www.shieldbaby.sn',
+  'https://shieldbaby.sn'
 ];
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Autoriser les requêtes sans origine (ex: Postman, curl)
+    // Autoriser les requêtes sans origine (Postman, curl)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.indexOf(origin) === -1) {
@@ -31,7 +33,7 @@ app.use(cors({
     }
     return callback(null, true);
   },
-  credentials: true, // si tu utilises les cookies ou sessions
+  credentials: true,
 }));
 
 // Connexion MongoDB

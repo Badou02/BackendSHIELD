@@ -9,28 +9,33 @@ const cloudinary = require('../config/cloudinary');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Route : POST /api/upload/:id
-router.post('/:id', upload.single('image'), async (req, res) => {
+// Route : POST /api/upload/:id (multi-images)
+router.post('/:id', upload.array('images', 5), async (req, res) => {
   try {
     const productId = req.params.id;
 
-    if (!req.file) {
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: 'Aucun fichier envoyé' });
     }
 
-    // Conversion du buffer en base64
-    const base64 = req.file.buffer.toString('base64');
-    const dataUri = `data:${req.file.mimetype};base64,${base64}`;
+    const uploadResults = [];
 
-    // Upload vers Cloudinary
-    const uploadResult = await cloudinary.uploader.upload(dataUri, {
-      folder: 'shieldbaby/products',
-    });
+    for (const file of req.files) {
+      const base64 = file.buffer.toString('base64');
+      const dataUri = `data:${file.mimetype};base64,${base64}`;
 
-    // Mise à jour du produit avec l'URL de l'image
+      // Upload vers Cloudinary
+      const uploadResult = await cloudinary.uploader.upload(dataUri, {
+        folder: 'shieldbaby/products',
+      });
+
+      uploadResults.push(uploadResult.secure_url);
+    }
+
+    // Mise à jour du produit avec les nouvelles images
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
-      { image: uploadResult.secure_url },
+      { $push: { images: { $each: uploadResults } } },
       { new: true }
     );
 
@@ -39,12 +44,12 @@ router.post('/:id', upload.single('image'), async (req, res) => {
     }
 
     res.json({
-      message: 'Image uploadée avec succès',
+      message: 'Images uploadées avec succès',
       product: updatedProduct
     });
   } catch (err) {
     console.error('Erreur upload image:', err);
-    res.status(500).json({ message: "Erreur lors de l'upload de l’image" });
+    res.status(500).json({ message: "Erreur lors de l'upload des images" });
   }
 });
 
