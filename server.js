@@ -11,7 +11,6 @@ const reviewsRoutes = require('./routes/reviews');
 const uploadRoutes = require('./routes/uploadRoutes');
 
 const cors = require('cors');
-
 const app = express();
 app.use(express.json());
 
@@ -26,6 +25,9 @@ app.use(cors({
   origin: function(origin, callback) {
     // Autoriser les requêtes sans origine (Postman, curl)
     if (!origin) return callback(null, true);
+
+    // ✅ Autoriser TOUS les sous-domaines Vercel preview automatiquement
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
 
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS.`;
@@ -56,9 +58,7 @@ app.use('/api/reviews', reviewsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// Servir les fichiers statiques (images uploadées)
 app.use('/uploads', express.static('uploads'));
 
-// Lancer serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Serveur sur http://localhost:${PORT}`));
